@@ -18,9 +18,9 @@ def svm_label(labels,main_class):
 class SupportVectorMachine:
 
     '''参数初始化 
-    lr: 梯度更新的学习率
-    Lambda: L2范数的系数
-    epochs: 更新迭代的次数
+    kernel: 核函数种类
+    C: 软间隔参数
+    Epsilon: 拉格朗日乘子阈值
     '''
     def __init__(self,kernel,C,Epsilon):
         self.kernel=kernel
@@ -50,6 +50,59 @@ class SupportVectorMachine:
         '''
         需要你实现的部分
         '''
+        # 训练部分，即求解对偶二次规划问题，P,q,G,h,A,b为输入矩阵，该问题求解采用QP算法
+        train_num = train_label.shape[0]
+        # 构造P
+        P = np.zeros([train_num, train_num])
+        for i in range(0, train_num):
+            for j in range(0, train_num):
+                # 直接取一行传入即可，一行会被处理成向量
+                P[i][j] = self.KERNEL(train_data[i], train_data[j], kernel=self.kernel) * train_label[i] * train_label[j]
+        # 构造q
+        q = -1 * np.ones([train_num, 1])
+        # 构造G、h
+        G_1 = np.eye(train_num, dtype=int)      # alpha_i <= C
+        h_1 = self.C * np.ones([train_num, 1])
+        G_2 = -1 * np.eye(train_num, dtype=int) # -alpha_i <= 0
+        h_2 = np.zeros([train_num, 1])
+        G = np.r_[G_1, G_2]
+        h = np.r_[h_1, h_2]
+        # 构造A、b
+        A = train_label.reshape(1, train_num)
+        b = np.zeros([1,1])
+        # 转换成cvxopt可接受的形式
+        P = cvxopt.matrix(P.astype(np.double))
+        q = cvxopt.matrix(q.astype(np.double))
+        G = cvxopt.matrix(G.astype(np.double))
+        h = cvxopt.matrix(h.astype(np.double))
+        A = cvxopt.matrix(A.astype(np.double))
+        b = cvxopt.matrix(b.astype(np.double))
+        # 调包求解
+        solution = cvxopt.solvers.qp(P, q, G, h, A, b)
+        alpha = np.array(solution['x'])
+        # 阈值筛选
+        indices = np.where(alpha > self.Epsilon)[0]
+        # 偏置
+        bias = np.mean(
+            [
+                train_label[i] - sum([
+                    train_label[j] * alpha[j] * self.KERNEL(train_data[i], train_data[j], kernel=self.kernel)
+                    for j in indices
+                ])
+                for i in indices
+            ]
+        )
+        
+        # 预测部分
+        test_num = test_data.shape[0]
+        predictions = [
+            bias + sum([
+                train_label[j] * alpha[j] * self.KERNEL(train_data[i], train_data[j], kernel=self.kernel)
+                for j in indices
+            ])
+            for i in range(0, test_num)
+        ]
+        return np.array(predictions).reshape(test_num, 1)
 
 
 

@@ -78,7 +78,7 @@ class NaiveBayes:
                     x_p = self.Pxc[j]
                     x_j = x[j]
                     if x_p['type']:
-                        # 连续型
+                        # 连续型，用mu和sigma计算gauss分布概率密度
                         mu = x_p['data'][y_lable]['mu']
                         sigma = x_p['data'][y_lable]['sigma']
                         p = p * np.exp(-(x_j - mu) ** 2 / (2 * sigma ** 2)) / (math.sqrt(2 * math.pi) * sigma)
