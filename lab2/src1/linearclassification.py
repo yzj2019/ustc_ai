@@ -61,7 +61,7 @@ class LinearClassification:
         datanum = test_features.shape[0]
         e = np.ones([datanum,1], dtype=float)
         X = np.c_[test_features,e]
-        return np.round(np.dot(X, self.omega))
+        return np.round(np.dot(X, self.omega))  # 简单舍入，作为分类的值
 
 
 
