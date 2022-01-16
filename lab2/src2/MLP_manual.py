@@ -48,11 +48,11 @@ class MLP(object):
     '''自定义多层感知机类'''
     def __init__(self, lossfunc, lr, epochs):
         '''初始化'''
-        self.lossfunc = lossfunc
-        self.lr = lr
-        self.epochs = epochs
-        self.layers = []
-        self.loss = []
+        self.lossfunc = lossfunc    # 损失函数名称
+        self.lr = lr                # 学习率
+        self.epochs = epochs        # 迭代次数
+        self.layers = []            # 存储各层网络
+        self.loss = []              # 存储每次训练的loss变化过程
 
     def add_layer(self, innum, outnum, func, weight=None, bias=None):
         '''添加一层全连接层'''
